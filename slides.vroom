@@ -1,0 +1,396 @@
+# Edit this file with your content. Then run `vroom --vroom` to start
+# the show!
+#
+# See `perldoc Vroom` for complete details.
+#
+---- config
+# Basic config options.
+title: EventMachine - testy akceptacyjne
+indent: 5
+height: 18
+width: 69
+skip: 0
+
+# The following options are for Gvim usage.
+vim: gvim
+
+---- center
+EventMachine - acceptance testing
+
+Paweł Pacana <pawel.pacana@gmail.com>
+
+----
+== Agenda
+
++* Case study
++* Tools
+  - EventMachine, Fibers, EM::Spec, BBQ
++* Acceptance scenarios
+
+----
+== Case study
+
++Yet another chat application!
+
++* client-server model
++* sockets
++* JSON protocol
++* server part in EM
+
++Tests?
+
++* unit        # internal building blocks
++* protocol    # external API
++* acceptance  # client interactions!
+
+----
+== Tools: EventMachine
+
++* evented I/O library
++  - others: rev, cool.io, libebb
++* event loop
++  - check descriptors
++   - select, epoll, kqueue, IOCP
++  - run callbacks
+
+----i2,ruby
+
+# in Ruby
+EM.run do
+  # go forth and handle events
+end
+
+----i2,c
+
+# in C++
+while (true) {
+   _UpdateTime();
+   if (!_RunTimers())
+     break;
+
+  _AddNewDescriptors();
+  _ModifyDescriptors();
+
+  if (!_RunOnce())
+    break;
+  if (bTerminateSignalReceived)
+    break;
+}
+
+----
+== Tools: Fibers
+
++* coroutines
++  - "Subroutines are special cases of ... coroutines."
++  - yield to re-enter
++* Ruby 1.9
++  - unofficialy backported to 1.8
+
+----i2,ruby
+require 'fiber'
+
+f = Fiber.new do
+  puts "say: "
+  Fiber.yield
+  puts "World!"
+end
+
+f.resume     # say:
+puts "Hello" # Hello
+f.resume     # World!
+
+f.resume     # fibered_hello_world.rb:11:in `resume':
+             # dead fiber called (FiberError)
+
+----
++* em-spec
++  - rspec, bacon, test/unit
+
+----i2,ruby
+== Tools: EM::Spec
+
+class EmSpecTest < Test::Unit::TestCase
+  include EventMachine::Test
+
+  def test_timer
+    start = Time.now
+
+    EM.add_timer(0.5) {
+      assert_in_delta 0.5, Time.now-start, 0.1
+      done # it does EM.stop_event_loop
+    }
+  end
+end
+
+----i2,ruby
+alias_method :run_without_em, :run
+
+def run(result, &block)
+  em(DefaultTimeout) { run_without_em(result, &block) }
+rescue Exception => e
+  # ...
+end
+
+----
+== Tools: BBQ
+
+* bbq
++  - hot! hot! hot!
++  - it's an approach
++    https://github.com/pawelpacana/eventmachine-bbq-example
++  - it will be a gem (sorry, only Rails support included)
++    https://github.com/drugpl/bbq
+
+----i2,ruby
+class TestMobile
+  attr_reader :env, :options
+
+  def initialize(env, options = {})
+    @env, @options = env, options
+  end
+
+  def connect!
+  end
+
+  def register_and_login
+  end
+
+  def disconnect!
+  end
+
+  def set_status(kind, description)
+  end
+
+  def add_to_friends(user)
+  end
+
+  def received?(type, block)
+  end
+end
+
+----i2,ruby
+require 'database_cleaner'
+
+module Chat
+  class TestCase < ActiveSupport::TestCase
+    include EM::Test
+    default_timeout(10)
+
+    # add some syntactic sugar
+    class << self
+      alias :scenario :test
+    end
+  end
+
+  module Server
+    class TestCase < ::Chat::TestCase
+      # EM::Test defines alias for run method and
+      # executes run_without_em inside event loop
+      def run_without_em(result, &block)
+        app = Chat::Server::Application.new
+        app.start("localhost", 1234) # EM.start_server
+        super                        
+        app.stop                     # EM.stop_server
+        DatabaseCleaner.clean        # truncate DB data after test
+        done                         # EM.stop_event_loop
+      end
+    end
+  end
+end
+
+----i2,ruby
+class StatusFeature < Chat::Server::TestCase
+  ONLINE, OFFLINE = 1, 0
+
+  scenario "setting offline on connection close" do
+    alice = TestMobile.new(self, :phone => "123")
+    bob   = TestMobile.new(self, :phone => "456")
+    
+    [alice, bob].each do |mobile|
+      mobile.register_and_login
+      mobile.connect!
+    end
+
+    alice.add_to_friends(bob)
+    alice.set_status(ONLINE, "on drugs")
+    bob.receive_message!(:status) do |message|
+      assert_equal message.body[:description], "on drugs"
+      assert_equal message.body[:kind], ONLINE
+    end
+
+    alice.disconnect!
+    bob.receive_message!(:status) do |message|
+      assert_equal message.body[:description], "on drugs"
+      assert_equal message.body[:kind], OFFLINE
+    end
+
+    [alice, bob].each(&:disconnect!)
+  end
+end
+
+----
+== Acceptance scenarios: test actor
+
++* threads
++* evented - reuse spawned reactor
++   - don't block reactor!
+
+----i2, ruby
+
+EM.connect("localhost", 1234, Connection)
+
+class Connection < EM::Connection
+  include EM::Protocols::LineProtocol
+
+  attr_accessor :messages
+
+  def initialize(*args)
+    @messages = Hash.new { |h, k| h[k] = [] }
+    # @messages[:status] = [first, second, ...]
+  end
+
+  def connection_completed
+    @messages[:connected] << true
+  end
+
+  def unbind
+    @messages[:disconnected] << true
+  end
+
+  def receive_line(data)
+    msg = TestMessage.parse(data)
+    @messages[msg.type] << msg
+  end
+
+  def send_line(data)
+    send_data("#{data.strip}\n")
+  end
+end
+
+----i2, ruby
+
+class TestMobile
+  attr_reader :env, :options
+
+  def initialize(env, options = {})
+    @env, @options = env, options
+  end
+
+  def connect!
+    @connection = EM.connect("localhost", 1234, Connection)
+    receive_message!(:connected)
+  end
+
+  def disconnect!
+    @connection.close_connection
+    receive_message!(:disconnected)
+  end
+
+  def register_and_login
+    deliver(:register, {:phone_number => @options[:phone]})
+    receive_message!(:confirm)
+  end
+
+  def set_status(kind, description)
+    deliver(:status, {:kind => kind, :description => description})
+    receive_message!(:confirm)
+  end
+
+  def add_to_friends(user)
+    # not interesting for this example
+  end
+
+  def received_message!(type, &block)
+    # XXX: naive implementation, obviously broken
+    msg = @connection.messages[type].shfit
+    
+    env.assert_not_nil msg
+    yield msg if block_given?
+    msg
+  end
+
+  protected
+  def deliver(type, body)
+    msg = TestMessage.new(type, body)
+    @connection.send_line(msg.to_json)
+  end
+end
+
+----i2,ruby
+class TestMobile
+  def fetch(type)
+    current_fiber = Fiber.current
+
+    observer = Observer.new(@connection.messages, kind)
+    observer.callback { |msg| current_fiber.resume(msg) }
+    observer.errback  { current_fiber.resume(nil) }
+
+    return Fiber.yield
+  end
+
+  def received_message!(type, &block)
+    msg = fetch(type)
+    
+    env.assert_not_nil msg
+    yield msg if block_given?
+    msg
+  end
+end
+
+----i2,ruby
+class Observer
+  include EM::Deferrable
+
+  def initialize(collection, type)
+    timeout(1) # we can set observe timeout
+               # if time has passed, fail() is executed
+               # and errback chain is called
+
+    @messages    = collection
+    @shift_timer = EM.add_periodic_timer(0.1) { shift_message(type) }
+
+    self.callback { EM.cancel_timer(@shift_timer) }
+    self.errback  { EM.cancel_timer(@shift_timer) }
+  end
+
+  def shift_message(type)
+    if msg = @messages[type].shift
+      succeed(msg)
+    end
+  end
+end
+
+
+----
+==== Summary
+
+----i2,ruby
+class StatusFeature < Chat::Server::TestCase
+  ONLINE, OFFLINE = 1, 0
+
+  scenario "setting offline on connection close" do
+    alice = TestMobile.new(self, :phone => "123")
+    bob   = TestMobile.new(self, :phone => "456")
+    
+    [alice, bob].each do |mobile|
+      mobile.register_and_login
+      mobile.connect!
+    end
+
+    alice.add_to_friends(bob)
+    alice.set_status(ONLINE, "on drugs")
+    bob.receive_message!(:status) do |message|
+      assert_equal message.body[:description], "on drugs"
+      assert_equal message.body[:kind], ONLINE
+    end
+
+    alice.disconnect!
+    bob.receive_message!(:status) do |message|
+      assert_equal message.body[:description], "on drugs"
+      assert_equal message.body[:kind], OFFLINE
+    end
+
+    [alice, bob].each(&:disconnect!)
+  end
+end
+
