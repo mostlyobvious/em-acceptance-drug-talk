@@ -1,0 +1,18 @@
+
+  # in C++
+  while (true) {
+     _UpdateTime();
+     if (!_RunTimers())
+       break;
+  
+    _AddNewDescriptors();
+    _ModifyDescriptors();
+  
+    if (!_RunOnce())
+      break;
+    if (bTerminateSignalReceived)
+      break;
+  }
+
+
+

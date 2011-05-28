@@ -1,0 +1,18 @@
+
+
+
+
+                         Tools: EventMachine
+     
+     * evented I/O library
+       - others: rev, cool.io, libebb
+     * event loop
+       - check descriptors
+        - select, epoll, kqueue, IOCP
+       - run callbacks
+
+
+
+
+
+

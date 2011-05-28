@@ -1,0 +1,18 @@
+
+
+
+
+
+                  Acceptance scenarios: test actor
+     
+     * threads
+     * evented - reuse spawned reactor
+        - don't block reactor!
+
+
+
+
+
+
+
+

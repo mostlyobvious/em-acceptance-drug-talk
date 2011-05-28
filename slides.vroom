@@ -360,10 +360,6 @@ class Observer
   end
 end
 
-
-----
-==== Summary
-
 ----i2,ruby
 class StatusFeature < Chat::Server::TestCase
   ONLINE, OFFLINE = 1, 0
@@ -389,8 +385,22 @@ class StatusFeature < Chat::Server::TestCase
       assert_equal message.body[:description], "on drugs"
       assert_equal message.body[:kind], OFFLINE
     end
-
-    [alice, bob].each(&:disconnect!)
   end
 end
 
+----
+== Summary
+
+* profit!
++ - waiting for messages with test fail after timeouts
++ - receiving messages all time (consider the same on Thread.sleep)
++ - startup time: separate server process loooooooooaaaaaaaaaaads dependencies
+
+----center
+== Q&A
+
+Questions?
+
++Follow me:
++@pawelpacana
++http://github.com/pawelpacana

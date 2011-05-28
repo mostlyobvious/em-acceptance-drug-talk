@@ -1,0 +1,18 @@
+
+
+
+
+
+                               Summary
+     
+     * profit!
+      - waiting for messages with test fail after timeouts
+      - receiving messages all time (consider the same on Thread.sleep)
+
+
+
+
+
+
+
+
