@@ -1,0 +1,46 @@
+<html>
+<head>
+<title>008.rb</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<script>
+function navigate(e) {
+    var keynum = (window.event) // IE
+        ? e.keyCode
+        : e.which;
+    if (keynum == 8) {
+        window.location = "007z" + ".html";
+        return false;
+    }
+    if (keynum == 13 || keynum == 32) {
+        window.location = "009" + ".html";
+        return false;
+    }
+    if (keynum == 73 || keynum == 105) {
+        window.location = "index.html";
+        return false;
+    }
+    return true;
+}
+</script>
+</head>
+<body onkeypress="return navigate(event)">
+<pre>
+  require 'fiber'
+  
+  f = Fiber.new do
+    puts &quot;say: &quot;
+    Fiber.yield
+    puts &quot;World!&quot;
+  end
+  
+  f.resume     # say:
+  puts &quot;Hello&quot; # Hello
+  f.resume     # World!
+  
+  f.resume     # fibered_hello_world.rb:11:in `resume':
+               # dead fiber called (FiberError)
+
+
+
+</pre>
+</body>

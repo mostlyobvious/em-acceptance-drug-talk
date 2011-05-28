@@ -1,0 +1,53 @@
+<html>
+<head>
+<title>013.rb</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<script>
+function navigate(e) {
+    var keynum = (window.event) // IE
+        ? e.keyCode
+        : e.which;
+    if (keynum == 8) {
+        window.location = "012z" + ".html";
+        return false;
+    }
+    if (keynum == 13 || keynum == 32) {
+        window.location = "014.rb" + ".html";
+        return false;
+    }
+    if (keynum == 73 || keynum == 105) {
+        window.location = "index.html";
+        return false;
+    }
+    return true;
+}
+</script>
+</head>
+<body onkeypress="return navigate(event)">
+<pre>  class TestMobile
+    attr_reader :env, :options
+  
+    def initialize(env, options = {})
+      @env, @options = env, options
+    end
+  
+    def connect!
+    end
+  
+    def register_and_login
+    end
+  
+    def disconnect!
+    end
+  
+    def set_status(kind, description)
+    end
+  
+    def add_to_friends(user)
+    end
+  
+    def received?(type, block)
+    end
+  end
+</pre>
+</body>

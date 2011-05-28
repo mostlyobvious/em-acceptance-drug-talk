@@ -1,0 +1,56 @@
+<html>
+<head>
+<title>015.rb</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<script>
+function navigate(e) {
+    var keynum = (window.event) // IE
+        ? e.keyCode
+        : e.which;
+    if (keynum == 8) {
+        window.location = "014.rb" + ".html";
+        return false;
+    }
+    if (keynum == 13 || keynum == 32) {
+        window.location = "016" + ".html";
+        return false;
+    }
+    if (keynum == 73 || keynum == 105) {
+        window.location = "index.html";
+        return false;
+    }
+    return true;
+}
+</script>
+</head>
+<body onkeypress="return navigate(event)">
+<pre>  class StatusFeature &lt; Chat::Server::TestCase
+    ONLINE, OFFLINE = 1, 0
+  
+    scenario &quot;setting offline on connection close&quot; do
+      alice = TestMobile.new(self, :phone =&gt; &quot;123&quot;)
+      bob   = TestMobile.new(self, :phone =&gt; &quot;456&quot;)
+      
+      [alice, bob].each do |mobile|
+        mobile.register_and_login
+        mobile.connect!
+      end
+  
+      alice.add_to_friends(bob)
+      alice.set_status(ONLINE, &quot;on drugs&quot;)
+      bob.receive_message!(:status) do |message|
+        assert_equal message.body[:description], &quot;on drugs&quot;
+        assert_equal message.body[:kind], ONLINE
+      end
+  
+      alice.disconnect!
+      bob.receive_message!(:status) do |message|
+        assert_equal message.body[:description], &quot;on drugs&quot;
+        assert_equal message.body[:kind], OFFLINE
+      end
+  
+      [alice, bob].each(&amp;:disconnect!)
+    end
+  end
+</pre>
+</body>

@@ -1,0 +1,46 @@
+<html>
+<head>
+<title>011.rb</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<script>
+function navigate(e) {
+    var keynum = (window.event) // IE
+        ? e.keyCode
+        : e.which;
+    if (keynum == 8) {
+        window.location = "010.rb" + ".html";
+        return false;
+    }
+    if (keynum == 13 || keynum == 32) {
+        window.location = "012" + ".html";
+        return false;
+    }
+    if (keynum == 73 || keynum == 105) {
+        window.location = "index.html";
+        return false;
+    }
+    return true;
+}
+</script>
+</head>
+<body onkeypress="return navigate(event)">
+<pre>
+
+
+
+  alias_method :run_without_em, :run
+  
+  def run(result, &amp;block)
+    em(DefaultTimeout) { run_without_em(result, &amp;block) }
+  rescue Exception =&gt; e
+    # ...
+  end
+
+
+
+
+
+
+
+</pre>
+</body>

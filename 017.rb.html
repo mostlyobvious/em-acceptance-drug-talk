@@ -1,0 +1,57 @@
+<html>
+<head>
+<title>017.rb</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<script>
+function navigate(e) {
+    var keynum = (window.event) // IE
+        ? e.keyCode
+        : e.which;
+    if (keynum == 8) {
+        window.location = "016z" + ".html";
+        return false;
+    }
+    if (keynum == 13 || keynum == 32) {
+        window.location = "018.rb" + ".html";
+        return false;
+    }
+    if (keynum == 73 || keynum == 105) {
+        window.location = "index.html";
+        return false;
+    }
+    return true;
+}
+</script>
+</head>
+<body onkeypress="return navigate(event)">
+<pre>  EM.connect(&quot;localhost&quot;, 1234, Connection)
+  
+  class Connection &lt; EM::Connection
+    include EM::Protocols::LineProtocol
+  
+    attr_accessor :messages
+  
+    def initialize(*args)
+      @messages = Hash.new { |h, k| h[k] = [] }
+      # @messages[:status] = [first, second, ...]
+    end
+  
+    def connection_completed
+      @messages[:connected] &lt;&lt; true
+    end
+  
+    def unbind
+      @messages[:disconnected] &lt;&lt; true
+    end
+  
+    def receive_line(data)
+      msg = TestMessage.parse(data)
+      @messages[msg.type] &lt;&lt; msg
+    end
+  
+    def send_line(data)
+      send_data(&quot;#{data.strip}\n&quot;)
+    end
+  end
+</pre>
+</body>

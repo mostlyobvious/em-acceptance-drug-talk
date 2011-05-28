@@ -1,0 +1,74 @@
+<html>
+<head>
+<title>018.rb</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<script>
+function navigate(e) {
+    var keynum = (window.event) // IE
+        ? e.keyCode
+        : e.which;
+    if (keynum == 8) {
+        window.location = "017.rb" + ".html";
+        return false;
+    }
+    if (keynum == 13 || keynum == 32) {
+        window.location = "019.rb" + ".html";
+        return false;
+    }
+    if (keynum == 73 || keynum == 105) {
+        window.location = "index.html";
+        return false;
+    }
+    return true;
+}
+</script>
+</head>
+<body onkeypress="return navigate(event)">
+<pre>  class TestMobile
+    attr_reader :env, :options
+  
+    def initialize(env, options = {})
+      @env, @options = env, options
+    end
+  
+    def connect!
+      @connection = EM.connect(&quot;localhost&quot;, 1234, Connection)
+      receive_message!(:connected)
+    end
+  
+    def disconnect!
+      @connection.close_connection
+      receive_message!(:disconnected)
+    end
+  
+    def register_and_login
+      deliver(:register, {:phone_number =&gt; @options[:phone]})
+      receive_message!(:confirm)
+    end
+  
+    def set_status(kind, description)
+      deliver(:status, {:kind =&gt; kind, :description =&gt; description})
+      receive_message!(:confirm)
+    end
+  
+    def add_to_friends(user)
+      # not interesting for this example
+    end
+  
+    def received_message!(type, &amp;block)
+      # XXX: naive implementation, obviously broken
+      msg = @connection.messages[type].shfit
+      
+      env.assert_not_nil msg
+      yield msg if block_given?
+      msg
+    end
+  
+    protected
+    def deliver(type, body)
+      msg = TestMessage.new(type, body)
+      @connection.send_line(msg.to_json)
+    end
+  end
+</pre>
+</body>

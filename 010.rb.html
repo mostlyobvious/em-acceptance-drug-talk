@@ -1,0 +1,46 @@
+<html>
+<head>
+<title>010.rb</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<script>
+function navigate(e) {
+    var keynum = (window.event) // IE
+        ? e.keyCode
+        : e.which;
+    if (keynum == 8) {
+        window.location = "009z" + ".html";
+        return false;
+    }
+    if (keynum == 13 || keynum == 32) {
+        window.location = "011.rb" + ".html";
+        return false;
+    }
+    if (keynum == 73 || keynum == 105) {
+        window.location = "index.html";
+        return false;
+    }
+    return true;
+}
+</script>
+</head>
+<body onkeypress="return navigate(event)">
+<pre>
+                           Tools: EM::Spec
+  
+  class EmSpecTest &lt; Test::Unit::TestCase
+    include EventMachine::Test
+  
+    def test_timer
+      start = Time.now
+  
+      EM.add_timer(0.5) {
+        assert_in_delta 0.5, Time.now-start, 0.1
+        done # it does EM.stop_event_loop
+      }
+    end
+  end
+
+
+
+</pre>
+</body>

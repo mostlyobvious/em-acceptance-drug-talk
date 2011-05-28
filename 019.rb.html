@@ -1,0 +1,47 @@
+<html>
+<head>
+<title>019.rb</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<script>
+function navigate(e) {
+    var keynum = (window.event) // IE
+        ? e.keyCode
+        : e.which;
+    if (keynum == 8) {
+        window.location = "018.rb" + ".html";
+        return false;
+    }
+    if (keynum == 13 || keynum == 32) {
+        window.location = "020.rb" + ".html";
+        return false;
+    }
+    if (keynum == 73 || keynum == 105) {
+        window.location = "index.html";
+        return false;
+    }
+    return true;
+}
+</script>
+</head>
+<body onkeypress="return navigate(event)">
+<pre>  class TestMobile
+    def fetch(type)
+      current_fiber = Fiber.current
+  
+      observer = Observer.new(@connection.messages, kind)
+      observer.callback { |msg| current_fiber.resume(msg) }
+      observer.errback  { current_fiber.resume(nil) }
+  
+      return Fiber.yield
+    end
+  
+    def received_message!(type, &amp;block)
+      msg = fetch(type)
+      
+      env.assert_not_nil msg
+      yield msg if block_given?
+      msg
+    end
+  end
+</pre>
+</body>
